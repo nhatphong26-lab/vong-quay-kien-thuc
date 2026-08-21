@@ -181,15 +181,74 @@ const playSound = (type) => {
   } catch(e) { console.log("Audio error", e); }
 };
 
+const QUESTION_BANKS = {
+  math: [
+    ['Kết quả của 36 + 27 là bao nhiêu?', ['63', '53', '73', '62'], 0],
+    ['Một hình vuông có cạnh 6 cm. Chu vi hình vuông là bao nhiêu?', ['24 cm', '36 cm', '12 cm', '18 cm'], 0],
+    ['Phân số nào bằng một nửa?', ['1/2', '2/3', '3/4', '1/3'], 0],
+    ['Số tiếp theo trong dãy 3, 6, 9, 12 là số nào?', ['15', '14', '16', '18'], 0],
+    ['Một lớp có 32 học sinh, chia đều thành 4 nhóm. Mỗi nhóm có bao nhiêu học sinh?', ['8', '6', '7', '9'], 0],
+  ],
+  vietnamese: [
+    ['Từ nào dưới đây là từ chỉ hoạt động?', ['Chạy', 'Chiếc bàn', 'Màu xanh', 'Niềm vui'], 0],
+    ['Câu nào dưới đây là câu hỏi?', ['Bạn đã làm bài tập chưa?', 'Em đang học bài.', 'Hãy mở sách ra!', 'Ôi, bông hoa đẹp quá!'], 0],
+    ['Từ nào đồng nghĩa với “chăm chỉ”?', ['Siêng năng', 'Lười biếng', 'Chậm chạp', 'Ồn ào'], 0],
+    ['Trong câu “Lan đọc sách”, từ nào chỉ người thực hiện hoạt động?', ['Lan', 'đọc', 'sách', 'đọc sách'], 0],
+    ['Từ nào viết đúng chính tả?', ['nghỉ ngơi', 'ngĩ ngơi', 'nghĩ nghơi', 'ngỉ ngơi'], 0],
+  ],
+  science: [
+    ['Bộ phận nào của cây hấp thụ nước và muối khoáng từ đất?', ['Rễ', 'Lá', 'Hoa', 'Quả'], 0],
+    ['Con người cần khí nào để hô hấp?', ['Ô-xi', 'Cacbonic', 'Hiđrô', 'Nitơ'], 0],
+    ['Nước chuyển từ thể lỏng sang thể khí gọi là gì?', ['Bay hơi', 'Đông đặc', 'Ngưng tụ', 'Nóng chảy'], 0],
+    ['Hành tinh nào gần Mặt Trời nhất?', ['Sao Thủy', 'Trái Đất', 'Sao Hỏa', 'Sao Mộc'], 0],
+    ['Nguồn năng lượng nào là năng lượng tái tạo?', ['Ánh sáng Mặt Trời', 'Than đá', 'Dầu mỏ', 'Khí tự nhiên'], 0],
+  ],
+  history: [
+    ['Ai là người đọc bản Tuyên ngôn Độc lập ngày 2/9/1945?', ['Chủ tịch Hồ Chí Minh', 'Võ Nguyên Giáp', 'Phan Bội Châu', 'Trần Hưng Đạo'], 0],
+    ['Chiến thắng Điện Biên Phủ diễn ra vào năm nào?', ['1954', '1945', '1975', '1968'], 0],
+    ['Nhà Trần nổi tiếng với ba lần chiến thắng quân xâm lược nào?', ['Nguyên – Mông', 'Minh', 'Thanh', 'Tống'], 0],
+    ['Vị vua nào dời đô từ Hoa Lư ra Thăng Long?', ['Lý Công Uẩn', 'Đinh Tiên Hoàng', 'Lê Lợi', 'Quang Trung'], 0],
+  ],
+  geography: [
+    ['Thủ đô của Việt Nam là thành phố nào?', ['Hà Nội', 'Huế', 'Đà Nẵng', 'Thành phố Hồ Chí Minh'], 0],
+    ['Dãy núi dài nhất Việt Nam là dãy núi nào?', ['Trường Sơn', 'Hoàng Liên Sơn', 'Tam Đảo', 'Bạch Mã'], 0],
+    ['Đồng bằng lớn nhất Việt Nam là đồng bằng nào?', ['Đồng bằng sông Cửu Long', 'Đồng bằng sông Hồng', 'Đồng bằng duyên hải miền Trung', 'Cao nguyên Mộc Châu'], 0],
+    ['Việt Nam nằm ở khu vực nào của châu Á?', ['Đông Nam Á', 'Đông Á', 'Nam Á', 'Trung Á'], 0],
+  ],
+  english: [
+    ['Từ tiếng Anh nào có nghĩa là “quyển sách”?', ['book', 'pen', 'table', 'school'], 0],
+    ['Chọn dạng đúng: “She ___ to school every day.”', ['goes', 'go', 'going', 'gone'], 0],
+    ['Từ trái nghĩa với “hot” là gì?', ['cold', 'warm', 'big', 'fast'], 0],
+    ['Câu nào dùng để hỏi tên?', ['What is your name?', 'How old are you?', 'Where are you from?', 'How are you?'], 0],
+  ],
+};
+
+const selectQuestionBank = (topic) => {
+  const value = topic.toLowerCase();
+  if (/toán|phép tính|số học/.test(value)) return QUESTION_BANKS.math;
+  if (/tiếng việt|ngữ văn|chính tả/.test(value)) return QUESTION_BANKS.vietnamese;
+  if (/khoa học|tự nhiên|sinh học|vật lý|hóa học/.test(value)) return QUESTION_BANKS.science;
+  if (/lịch sử/.test(value)) return QUESTION_BANKS.history;
+  if (/địa lý|địa lí/.test(value)) return QUESTION_BANKS.geography;
+  if (/tiếng anh|english/.test(value)) return QUESTION_BANKS.english;
+  return [
+    [`Nội dung nào sau đây phù hợp nhất với chủ đề “${topic}”?`, [`Kiến thức cốt lõi của ${topic}`, `Một nội dung không liên quan đến ${topic}`, 'Một nhận định thiếu căn cứ', 'Tất cả phương án đều sai'], 0],
+    [`Khi tìm hiểu về “${topic}”, việc nào nên làm trước tiên?`, ['Xác định khái niệm và thông tin chính', 'Bỏ qua nguồn tài liệu', 'Chỉ học thuộc một câu', 'Không cần kiểm tra thông tin'], 0],
+    [`Cách học nào giúp hiểu chủ đề “${topic}” tốt nhất?`, ['Kết hợp đọc, thực hành và tự giải thích', 'Chỉ nhìn đáp án', 'Không đặt câu hỏi', 'Ghi nhớ mà không hiểu'], 0],
+  ];
+};
+
 const callGemini = async (prompt, systemInstruction = null, isJson = false) => {
   if (isJson) {
     const requestedCount = Math.min(10, Math.max(1, Number(prompt.match(/Tạo (\d+)/)?.[1] || 1)));
     const topic = prompt.match(/chủ đề: "([^"]+)"/)?.[1] || 'Kiến thức tổng hợp';
-    const templates = Array.from({ length: requestedCount }, (_, index) => ({
-      text: `${topic}: Câu hỏi luyện tập số ${index + 1} — đáp án đúng nằm ở lựa chọn nào?`,
-      options: [`Đáp án đúng ${index + 1}`, 'Phương án B', 'Phương án C', 'Phương án D'],
-      correctIndex: 0,
-    }));
+    const bank = selectQuestionBank(topic);
+    const templates = Array.from({ length: requestedCount }, (_, index) => {
+      const [text, options, correctIndex] = bank[index % bank.length];
+      const shift = index % options.length;
+      const rotatedOptions = [...options.slice(shift), ...options.slice(0, shift)];
+      return { text, options: rotatedOptions, correctIndex: (correctIndex - shift + options.length) % options.length };
+    });
     return JSON.stringify(templates);
   }
 
@@ -986,6 +1045,7 @@ const AdminPanel = ({ questions, allUsers }) => {
   };
 
   const handleDeleteMultiple = async () => {
+      if (selectedQs.length === 0) return;
       try {
           setIsSubmitting(true);
           await Promise.all(selectedQs.map(id => deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'questions', id))));
@@ -1085,16 +1145,17 @@ const AdminPanel = ({ questions, allUsers }) => {
           </div>
 
           <div className={`${THEME.surface} border ${THEME.border} rounded-2xl p-6 shadow-xl`}>
-             <div className="flex justify-between items-center mb-4">
+             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                 <h2 className="text-xl font-bold flex items-center gap-2"><Settings className="text-[#f5c542]"/> Ngân Hàng Câu Hỏi ({questions.length})</h2>
-                {selectedQs.length > 0 && <button onClick={handleDeleteMultiple} disabled={isSubmitting} className="bg-red-500 hover:bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold flex items-center gap-1 disabled:opacity-50"><Trash2 size={16}/> Xoá {selectedQs.length} câu</button>}
+                <button onClick={handleDeleteMultiple} disabled={isSubmitting || selectedQs.length === 0} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"><Trash2 size={16}/> Xóa hàng loạt ({selectedQs.length})</button>
              </div>
              
              <div className="space-y-3">
                 {questions.length === 0 ? <p className="text-gray-500 italic text-center py-4">Chưa có câu hỏi nào trong ngân hàng.</p> : (
                    <div className="flex items-center gap-2 p-2 bg-[#2a1245] rounded-lg border border-[#3d1a66]">
                       <input type="checkbox" checked={selectedQs.length === questions.length && questions.length > 0} onChange={e => setSelectedQs(e.target.checked ? questions.map(q=>q.id) : [])} className="w-4 h-4 accent-[#f5c542] ml-2" />
-                      <span className="text-sm font-bold text-gray-300">Chọn tất cả</span>
+                      <span className="text-sm font-bold text-gray-300">Chọn tất cả {questions.length} câu</span>
+                      {selectedQs.length > 0 && <span className="ml-auto mr-2 text-xs font-bold text-[#f5c542]">Đã chọn {selectedQs.length}</span>}
                    </div>
                 )}
                 {questions.map((q, i) => (
