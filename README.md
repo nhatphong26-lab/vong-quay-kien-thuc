@@ -1,0 +1,16 @@
+# Vòng Quay Kiến Thức
+
+Trò chơi học tập được đóng gói lại từ bản thiết kế Gemini Canvas, gồm vòng quay, câu hỏi, cửa hàng lượt quay, bảng xếp hạng và trang quản trị giáo viên.
+
+## Chạy trên máy
+
+1. Chạy `npm install`.
+2. Chạy `npm run dev`.
+
+Dữ liệu được lưu ngay trong trình duyệt của thiết bị bằng Local Storage, vì vậy bản GitHub Pages chạy độc lập và không cần Firebase.
+
+Tài khoản quản trị mặc định trong bản gốc: `admin` / `123@`. Hãy đổi thông tin này trước khi dùng chính thức.
+
+## Xuất bản GitHub Pages
+
+Repo đã kèm workflow tự động build và xuất bản khi đẩy mã lên nhánh `main`.
