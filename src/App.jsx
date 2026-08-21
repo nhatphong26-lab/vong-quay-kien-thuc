@@ -238,6 +238,24 @@ const selectQuestionBank = (topic) => {
   ];
 };
 
+const normalizeQuestionText = (text = '') => text
+  .normalize('NFD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/[^a-z0-9\s]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+const uniqueQuestions = (items) => {
+  const seen = new Set();
+  return items.filter((question) => {
+    const key = normalizeQuestionText(question.text);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 const callGemini = async (prompt, systemInstruction = null, isJson = false) => {
   if (isJson) {
     const requestedCount = Math.min(10, Math.max(1, Number(prompt.match(/Tạo (\d+)/)?.[1] || 1)));
@@ -451,6 +469,7 @@ const WheelGame = ({ userData, questions }) => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [message, setMessage] = useState('');
+  const lastQuestionIdRef = useRef(null);
   
   // 8 Pháp trận: 7 ô xu nhỏ, 1 ô Báu vật (Golden Node) vị trí số 7
   const NORMAL_NODES = [1, 2, 5, 1, 2, 5, 1];
@@ -503,7 +522,11 @@ const WheelGame = ({ userData, questions }) => {
       } catch (err) { console.error(err); }
 
       setTimeout(() => {
-          const randomQ = questions[Math.floor(Math.random() * questions.length)];
+          const candidates = questions.length > 1
+            ? questions.filter(question => question.id !== lastQuestionIdRef.current)
+            : questions;
+          const randomQ = candidates[Math.floor(Math.random() * candidates.length)];
+          lastQuestionIdRef.current = randomQ.id;
           setSelectedQuestion(randomQ);
           setShowModal(true);
       }, 1500);
@@ -1005,6 +1028,12 @@ const AdminPanel = ({ questions, allUsers }) => {
     if (!formData.text || !formData.opt0 || !formData.opt1 || !formData.opt2 || !formData.opt3) return;
     setIsSubmitting(true);
     const qData = { text: formData.text, options: [formData.opt0, formData.opt1, formData.opt2, formData.opt3], correctIndex: parseInt(formData.correctIndex), topic: formData.topic, difficulty: formData.difficulty, createdAt: new Date().toISOString() };
+    const questionKey = normalizeQuestionText(qData.text);
+    if (questions.some(question => normalizeQuestionText(question.text) === questionKey)) {
+      setFormMsg({ type: 'error', text: 'Câu hỏi này đã có trong ngân hàng nên không được lưu trùng.' });
+      setIsSubmitting(false);
+      return;
+    }
     try {
       await setDoc(doc(collection(db, 'artifacts', appId, 'public', 'data', 'questions')), qData);
       setFormData({ text: '', opt0: '', opt1: '', opt2: '', opt3: '', correctIndex: 0, topic: formData.topic, difficulty: formData.difficulty });
@@ -1029,14 +1058,27 @@ const AdminPanel = ({ questions, allUsers }) => {
            const parsedArray = JSON.parse(match[0]);
            if (Array.isArray(parsedArray) && parsedArray.length > 0) {
              let successCount = 0;
+             let duplicateCount = 0;
+             const knownQuestionKeys = new Set(questions.map(question => normalizeQuestionText(question.text)));
              for (const parsed of parsedArray) {
                if (parsed.text && parsed.options?.length === 4 && parsed.correctIndex !== undefined) {
+                 const questionKey = normalizeQuestionText(parsed.text);
+                 if (!questionKey || knownQuestionKeys.has(questionKey)) {
+                   duplicateCount++;
+                   continue;
+                 }
                  const qData = { text: parsed.text, options: parsed.options, correctIndex: parseInt(parsed.correctIndex), topic: aiGenTopic, difficulty: formData.difficulty, createdAt: new Date().toISOString() };
                  await setDoc(doc(collection(db, 'artifacts', appId, 'public', 'data', 'questions')), qData);
+                 knownQuestionKeys.add(questionKey);
                  successCount++;
                }
              }
-             setFormMsg({ type: 'success', text: `AI đã tạo và tự động lưu ${successCount} câu hỏi!` });
+             setFormMsg({
+               type: successCount > 0 ? 'success' : 'error',
+               text: successCount > 0
+                 ? `Đã lưu ${successCount} câu hỏi mới${duplicateCount ? `, bỏ qua ${duplicateCount} câu trùng` : ''}.`
+                 : `Không có câu mới: đã bỏ qua ${duplicateCount} câu trùng.`,
+             });
            } else throw new Error("Invalid structure");
         } else throw new Error("Regex match failed");
       } else throw new Error("Empty response");
@@ -1232,7 +1274,7 @@ export default function App() {
     }, console.error);
 
     const unsubQ = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), (snap) => {
-      setQuestions(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      setQuestions(uniqueQuestions(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
     }, console.error);
 
     return () => { unsubUsers(); unsubQ(); };
