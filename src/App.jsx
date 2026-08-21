@@ -1107,7 +1107,9 @@ const AdminPanel = ({ questions, allUsers }) => {
                 <div className="flex items-center gap-2 w-full xl:w-auto bg-[#0d0715] p-2 rounded-xl border border-[#3d1a66]">
                    <Bot className="text-[#8b5cf6] shrink-0 ml-1"/>
                    <input type="text" value={aiGenTopic} onChange={e=>setAiGenTopic(e.target.value)} placeholder="Nhập chủ đề cho AI..." className="bg-transparent text-white text-sm px-2 py-1 outline-none w-32 sm:w-40" />
-                   <select value={aiGenGrade} onChange={e=>setAiGenGrade(e.target.value)} className="bg-[#2a1245] text-white text-xs rounded p-1.5 outline-none border border-[#3d1a66]"><option>Mầm non</option><option>Lớp 1</option><option>Lớp 5</option><option>Lớp 9</option><option>Lớp 12</option></select>
+                   <select value={aiGenGrade} onChange={e=>setAiGenGrade(e.target.value)} className="bg-[#2a1245] text-white text-xs rounded p-1.5 outline-none border border-[#3d1a66]">
+                      {['Mầm non', ...Array.from({ length: 12 }, (_, index) => `Lớp ${index + 1}`)].map(grade => <option key={grade}>{grade}</option>)}
+                   </select>
                    <select value={aiGenCount} onChange={e=>setAiGenCount(e.target.value)} className="bg-[#2a1245] text-white text-xs rounded p-1.5 outline-none border border-[#3d1a66]">{[1,2,3,5,10].map(n=><option key={n} value={n}>{n} câu</option>)}</select>
                    <button onClick={handleAIGenerate} disabled={isGenerating} className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-3 py-1.5 rounded-lg text-sm font-bold disabled:opacity-50 whitespace-nowrap">Tạo Nhanh</button>
                 </div>
