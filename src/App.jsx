@@ -40,6 +40,14 @@ const DIFFICULTY_SCORES = {
 };
 
 const MAX_SPINS_PER_DAY = 5;
+const ADMIN_USERNAME = 'admin';
+const ADMIN_PASSWORD_HASH = 'ab99bc36de4b4ac860b5959a7a062972a5310be37429fb8ed5e5aeaff713813e';
+
+const hashPassword = async (value) => {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+};
 
 const getTodayString = () => new Date().toISOString().split('T')[0];
 const getYesterdayString = () => {
@@ -881,22 +889,31 @@ const AuthForms = ({ allUsers, onLoginSuccess }) => {
       if (isLogin) {
         const user = allUsers.find(u => u.username === cleanUsername);
         if (!user) {
-           if (cleanUsername === 'admin' && password === '123@') {
+           if (cleanUsername === ADMIN_USERNAME && await hashPassword(password) === ADMIN_PASSWORD_HASH) {
               const newUserRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'users'));
-              const newUserData = { username: cleanUsername, password: password, displayName: 'Giáo viên', role: 'admin', points: 0, power: 0, streak: 0, lastLogin: '', spinsLeft: MAX_SPINS_PER_DAY, correctAnswers: 0, consecutiveCorrect: 0, perfectSpins: 0, badges: [], history: [], cheeredToday: [] };
+              const newUserData = { username: cleanUsername, password: ADMIN_PASSWORD_HASH, displayName: 'Giáo viên', role: 'admin', points: 0, power: 0, streak: 0, lastLogin: '', spinsLeft: MAX_SPINS_PER_DAY, correctAnswers: 0, consecutiveCorrect: 0, perfectSpins: 0, badges: [], history: [], cheeredToday: [] };
               await setDoc(newUserRef, newUserData);
               onLoginSuccess({ id: newUserRef.id, ...newUserData });
               setLoading(false); return;
            }
            setError('Tài khoản không tồn tại. Nếu bạn là học sinh mới, vui lòng Đăng ký.');
-        } else if (user.password !== password) {
-           setError('Sai mật khẩu!');
         } else {
-           onLoginSuccess(user);
+           const isAdmin = user.role === 'admin' || cleanUsername === ADMIN_USERNAME;
+           const passwordMatches = isAdmin
+             ? await hashPassword(password) === ADMIN_PASSWORD_HASH
+             : user.password === password;
+           if (!passwordMatches) {
+             setError('Sai mật khẩu!');
+           } else if (isAdmin && user.password !== ADMIN_PASSWORD_HASH) {
+             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.id), { password: ADMIN_PASSWORD_HASH });
+             onLoginSuccess({ ...user, password: ADMIN_PASSWORD_HASH, role: 'admin' });
+           } else {
+             onLoginSuccess(user);
+           }
         }
       } else {
         if (!displayName) { setError('Vui lòng nhập họ tên hiển thị.'); setLoading(false); return; }
-        if (cleanUsername === 'admin') { setError('Không thể đăng ký tài khoản admin.'); setLoading(false); return; }
+        if (cleanUsername === ADMIN_USERNAME) { setError('Không thể đăng ký tài khoản admin.'); setLoading(false); return; }
         if (allUsers.find(u => u.username === cleanUsername)) { setError('Tên đăng nhập này đã có người sử dụng.'); setLoading(false); return; }
 
         const newUserRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'users'));
@@ -919,7 +936,7 @@ const AuthForms = ({ allUsers, onLoginSuccess }) => {
         <div className="text-center mb-8 relative z-10">
           <div className="mx-auto w-16 h-16 bg-[#2a1245] border-2 border-[#f5c542] rounded-full flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(245,197,66,0.3)]"><Star className="text-[#f5c542] w-8 h-8" /></div>
           <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f5c542] to-[#ff9d00]">Vòng Quay Kiến Thức</h2>
-          <p className="text-gray-400 mt-2">{isLogin ? 'Đăng nhập để tiếp tục (Giáo viên: admin/123@)' : 'Tạo tài khoản chiến binh mới'}</p>
+          <p className="text-gray-400 mt-2">{isLogin ? 'Đăng nhập để tiếp tục' : 'Tạo tài khoản chiến binh mới'}</p>
         </div>
 
         {error && <div className="bg-red-500/20 border border-red-500 text-red-300 p-3 rounded-lg mb-4 text-sm text-center">{error}</div>}
