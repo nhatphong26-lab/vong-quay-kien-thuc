@@ -1108,19 +1108,19 @@ const AdminPanel = ({ questions, allUsers }) => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex gap-2 mb-4 bg-[#1a0b2e] p-2 rounded-xl border border-[#3d1a66]">
-         <button onClick={() => setActiveTab('questions')} className={`flex-1 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'questions' ? 'bg-[#f5c542] text-[#0d0715]' : 'text-gray-400 hover:bg-[#2a1245]'}`}>📚 Quản lý Câu Hỏi</button>
-         <button onClick={() => setActiveTab('users')} className={`flex-1 py-2 rounded-lg font-bold text-sm transition-colors ${activeTab === 'users' ? 'bg-[#f5c542] text-[#0d0715]' : 'text-gray-400 hover:bg-[#2a1245]'}`}>🧑‍🎓 Quản lý Học Sinh</button>
+    <div className="min-w-0 space-y-4 sm:space-y-6">
+      <div className="grid grid-cols-2 gap-2 mb-4 bg-[#1a0b2e] p-2 rounded-xl border border-[#3d1a66]">
+         <button onClick={() => setActiveTab('questions')} className={`min-w-0 px-2 py-2 rounded-lg font-bold text-xs sm:text-sm transition-colors ${activeTab === 'questions' ? 'bg-[#f5c542] text-[#0d0715]' : 'text-gray-400 hover:bg-[#2a1245]'}`}>📚 Quản lý Câu Hỏi</button>
+         <button onClick={() => setActiveTab('users')} className={`min-w-0 px-2 py-2 rounded-lg font-bold text-xs sm:text-sm transition-colors ${activeTab === 'users' ? 'bg-[#f5c542] text-[#0d0715]' : 'text-gray-400 hover:bg-[#2a1245]'}`}>🧑‍🎓 Quản lý Học Sinh</button>
       </div>
 
       {formMsg.text && ( <div className={`mb-4 p-3 rounded-lg text-sm border ${formMsg.type === 'error' ? 'bg-red-900/30 border-red-500/50 text-red-300' : 'bg-green-900/30 border-green-500/50 text-green-300'}`}>{formMsg.text}</div> )}
 
       {activeTab === 'users' && (
-         <div className={`${THEME.surface} border ${THEME.border} rounded-2xl p-6 shadow-xl`}>
+         <div className={`${THEME.surface} min-w-0 border ${THEME.border} rounded-2xl p-3 sm:p-6 shadow-xl`}>
             <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><User className="text-[#f5c542]"/> Danh sách Học sinh</h2>
             <div className="overflow-x-auto">
-               <table className="w-full text-left text-sm text-gray-300">
+               <table className="w-full min-w-[640px] text-left text-sm text-gray-300">
                   <thead className="bg-[#2a1245] text-xs uppercase text-gray-400">
                      <tr><th className="p-3 rounded-tl-lg">Học sinh</th><th className="p-3">Tài khoản</th><th className="p-3">Xu</th><th className="p-3 text-center">Lượt quay</th><th className="p-3 rounded-tr-lg text-right">Thao tác</th></tr>
                   </thead>
@@ -1144,52 +1144,54 @@ const AdminPanel = ({ questions, allUsers }) => {
 
       {activeTab === 'questions' && (
         <>
-          <div className={`${THEME.surface} border ${THEME.border} rounded-2xl p-6 shadow-xl`}>
+          <div className={`${THEME.surface} min-w-0 border ${THEME.border} rounded-2xl p-3 sm:p-6 shadow-xl`}>
              <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4 border-b border-[#3d1a66] pb-4">
-                <h2 className="text-xl font-bold flex items-center gap-2 shrink-0"><Settings className="text-[#f5c542]"/> Thêm Câu Hỏi Mới</h2>
-                <div className="flex items-center gap-2 w-full xl:w-auto bg-[#0d0715] p-2 rounded-xl border border-[#3d1a66]">
-                   <Bot className="text-[#8b5cf6] shrink-0 ml-1"/>
-                   <input type="text" value={aiGenTopic} onChange={e=>setAiGenTopic(e.target.value)} placeholder="Nhập chủ đề cho AI..." className="bg-transparent text-white text-sm px-2 py-1 outline-none w-32 sm:w-40" />
-                   <select value={aiGenGrade} onChange={e=>setAiGenGrade(e.target.value)} className="bg-[#2a1245] text-white text-xs rounded p-1.5 outline-none border border-[#3d1a66]">
+                <h2 className="text-lg sm:text-xl font-bold flex items-center gap-2 min-w-0"><Settings className="text-[#f5c542] shrink-0"/> <span className="break-words">Thêm Câu Hỏi Mới</span></h2>
+                <div className="grid w-full min-w-0 grid-cols-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto] gap-2 bg-[#0d0715] p-2 rounded-xl border border-[#3d1a66] xl:max-w-2xl">
+                   <div className="col-span-2 sm:col-span-1 flex min-w-0 items-center">
+                     <Bot className="text-[#8b5cf6] shrink-0 ml-1"/>
+                     <input type="text" value={aiGenTopic} onChange={e=>setAiGenTopic(e.target.value)} placeholder="Nhập chủ đề cho AI..." className="min-w-0 w-full bg-transparent text-white text-sm px-2 py-2 outline-none" />
+                   </div>
+                   <select value={aiGenGrade} onChange={e=>setAiGenGrade(e.target.value)} className="min-w-0 w-full bg-[#2a1245] text-white text-xs rounded p-2 outline-none border border-[#3d1a66]">
                       {['Mầm non', ...Array.from({ length: 12 }, (_, index) => `Lớp ${index + 1}`)].map(grade => <option key={grade}>{grade}</option>)}
                    </select>
-                   <select value={aiGenCount} onChange={e=>setAiGenCount(e.target.value)} className="bg-[#2a1245] text-white text-xs rounded p-1.5 outline-none border border-[#3d1a66]">{[1,2,3,5,10].map(n=><option key={n} value={n}>{n} câu</option>)}</select>
-                   <button onClick={handleAIGenerate} disabled={isGenerating} className="bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-3 py-1.5 rounded-lg text-sm font-bold disabled:opacity-50 whitespace-nowrap">Tạo Nhanh</button>
+                   <select value={aiGenCount} onChange={e=>setAiGenCount(e.target.value)} className="min-w-0 w-full bg-[#2a1245] text-white text-xs rounded p-2 outline-none border border-[#3d1a66]">{[1,2,3,5,10].map(n=><option key={n} value={n}>{n} câu</option>)}</select>
+                   <button onClick={handleAIGenerate} disabled={isGenerating} className="col-span-2 sm:col-span-1 bg-[#8b5cf6] hover:bg-[#7c3aed] text-white px-3 py-2 rounded-lg text-sm font-bold disabled:opacity-50 whitespace-nowrap">Tạo Nhanh</button>
                 </div>
              </div>
              
              <form onSubmit={handleSave} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div>
+                   <div className="min-w-0">
                       <label className="block text-sm text-gray-300 mb-1">Chủ đề (Môn học)</label>
                       <input type="text" value={formData.topic} onChange={e=>setFormData({...formData, topic: e.target.value})} className="w-full bg-[#0d0715] border border-[#3d1a66] rounded-lg px-3 py-2 text-white outline-none focus:border-[#f5c542]" required />
                    </div>
-                   <div>
+                   <div className="min-w-0">
                       <label className="block text-sm text-gray-300 mb-1">Mức độ khó</label>
                       <select value={formData.difficulty} onChange={e=>setFormData({...formData, difficulty: e.target.value})} className="w-full bg-[#0d0715] border border-[#3d1a66] rounded-lg px-3 py-2 text-white outline-none focus:border-[#f5c542]">
                          <option value="easy">Dễ (+10 xu / -2 xu)</option><option value="medium">Trung bình (+10 xu / -5 xu)</option><option value="hard">Khó (+10 xu / -7 xu)</option>
                       </select>
                    </div>
                 </div>
-                <div>
+                <div className="min-w-0">
                    <label className="block text-sm text-gray-300 mb-1">Nội dung câu hỏi</label>
                    <textarea value={formData.text} onChange={e=>setFormData({...formData, text: e.target.value})} className="w-full bg-[#0d0715] border border-[#3d1a66] rounded-lg px-3 py-2 text-white outline-none focus:border-[#f5c542] h-20" required />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    {[0,1,2,3].map(i => (
-                      <div key={i} className="flex items-center gap-2">
+                      <div key={i} className="flex min-w-0 items-center gap-2">
                          <input type="radio" name="correctIndex" checked={formData.correctIndex === i} onChange={()=>setFormData({...formData, correctIndex: i})} className="w-4 h-4 accent-[#f5c542]" />
-                         <input type="text" value={formData[`opt${i}`]} onChange={e=>setFormData({...formData, [`opt${i}`]: e.target.value})} placeholder={`Đáp án ${['A','B','C','D'][i]}`} className="flex-1 bg-[#0d0715] border border-[#3d1a66] rounded-lg px-3 py-2 text-white outline-none focus:border-[#f5c542]" required />
+                         <input type="text" value={formData[`opt${i}`]} onChange={e=>setFormData({...formData, [`opt${i}`]: e.target.value})} placeholder={`Đáp án ${['A','B','C','D'][i]}`} className="min-w-0 flex-1 bg-[#0d0715] border border-[#3d1a66] rounded-lg px-3 py-2 text-white outline-none focus:border-[#f5c542]" required />
                       </div>
                    ))}
                 </div>
                 <div className="pt-2">
-                   <button type="submit" disabled={isSubmitting} className="bg-[#f5c542] hover:bg-[#e6b322] text-[#0d0715] px-6 py-2.5 rounded-lg font-bold shadow-[0_0_15px_rgba(245,197,66,0.3)] disabled:opacity-50">Lưu Câu Hỏi Bằng Tay</button>
+                   <button type="submit" disabled={isSubmitting} className="w-full sm:w-auto bg-[#f5c542] hover:bg-[#e6b322] text-[#0d0715] px-4 sm:px-6 py-2.5 rounded-lg font-bold shadow-[0_0_15px_rgba(245,197,66,0.3)] disabled:opacity-50">Lưu Câu Hỏi Bằng Tay</button>
                 </div>
              </form>
           </div>
 
-          <div className={`${THEME.surface} border ${THEME.border} rounded-2xl p-6 shadow-xl`}>
+          <div className={`${THEME.surface} min-w-0 border ${THEME.border} rounded-2xl p-3 sm:p-6 shadow-xl`}>
              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-4">
                 <h2 className="text-xl font-bold flex items-center gap-2"><Settings className="text-[#f5c542]"/> Ngân Hàng Câu Hỏi ({questions.length})</h2>
                 <button onClick={handleDeleteMultiple} disabled={isSubmitting || selectedQs.length === 0} className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"><Trash2 size={16}/> Xóa hàng loạt ({selectedQs.length})</button>
@@ -1204,18 +1206,18 @@ const AdminPanel = ({ questions, allUsers }) => {
                    </div>
                 )}
                 {questions.map((q, i) => (
-                   <div key={q.id} className={`bg-[#0d0715] border rounded-xl p-4 flex gap-4 transition-colors ${selectedQs.includes(q.id) ? 'border-[#f5c542] shadow-[0_0_10px_rgba(245,197,66,0.2)]' : 'border-[#3d1a66]'}`}>
+                   <div key={q.id} className={`min-w-0 bg-[#0d0715] border rounded-xl p-3 sm:p-4 flex gap-3 sm:gap-4 transition-colors ${selectedQs.includes(q.id) ? 'border-[#f5c542] shadow-[0_0_10px_rgba(245,197,66,0.2)]' : 'border-[#3d1a66]'}`}>
                       <div className="pt-1"><input type="checkbox" checked={selectedQs.includes(q.id)} onChange={() => setSelectedQs(prev => prev.includes(q.id) ? prev.filter(id => id !== q.id) : [...prev, q.id])} className="w-4 h-4 accent-[#f5c542]" /></div>
-                      <div className="flex-1">
-                         <div className="flex items-center gap-2 mb-2">
+                      <div className="min-w-0 flex-1">
+                         <div className="flex flex-wrap items-center gap-2 mb-2">
                             <span className="font-bold text-gray-400">Câu {i+1}:</span>
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${q.difficulty === 'hard' ? 'bg-red-900/50 text-red-400' : q.difficulty === 'easy' ? 'bg-green-900/50 text-green-400' : 'bg-yellow-900/50 text-yellow-400'}`}>{DIFFICULTY_SCORES[q.difficulty||'medium'].name}</span>
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-[#2a1245] text-white">{q.topic}</span>
                          </div>
-                         <p className="font-medium text-white mb-3">{q.text}</p>
+                         <p className="font-medium text-white mb-3 break-words">{q.text}</p>
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                             {q.options.map((opt, oIdx) => (
-                               <div key={oIdx} className={`p-2 rounded border ${oIdx === q.correctIndex ? 'bg-green-900/30 border-green-500/50 text-green-400 font-bold' : 'bg-[#1a0b2e] border-[#3d1a66] text-gray-400'}`}>
+                               <div key={oIdx} className={`min-w-0 break-words p-2 rounded border ${oIdx === q.correctIndex ? 'bg-green-900/30 border-green-500/50 text-green-400 font-bold' : 'bg-[#1a0b2e] border-[#3d1a66] text-gray-400'}`}>
                                   {['A','B','C','D'][oIdx]}. {opt}
                                </div>
                             ))}
@@ -1335,13 +1337,13 @@ export default function App() {
     <div className={`min-h-screen ${THEME.bg} text-white font-sans overflow-x-hidden selection:bg-[#f5c542] selection:text-[#2a1245]`}>
       
       {loggedInUser && (
-        <nav className={`${THEME.surface} border-b ${THEME.border} p-4 flex justify-between items-center sticky top-0 z-40 shadow-md`}>
+        <nav className={`${THEME.surface} border-b ${THEME.border} px-2 py-3 sm:p-4 flex justify-between items-center gap-2 sticky top-0 z-40 shadow-md`}>
           <div className="flex items-center space-x-2">
             <div className="w-10 h-10 bg-[#2a1245] rounded-full border-2 border-[#f5c542] flex items-center justify-center"><Star className="text-[#f5c542] w-6 h-6" /></div>
             <span className="font-bold text-xl hidden sm:inline text-transparent bg-clip-text bg-gradient-to-r from-[#f5c542] to-[#ff9d00]">Quiz Wheel</span>
           </div>
 
-          <div className="flex space-x-1 sm:space-x-4">
+          <div className="min-w-0 flex space-x-0.5 sm:space-x-4">
             <NavBtn icon={<User size={18}/>} label="Hồ sơ" active={currentView === 'dashboard'} onClick={() => setCurrentView('dashboard')} />
             {loggedInUser.role !== 'admin' && <NavBtn icon={<Play size={18}/>} label="Chơi Ngay" active={currentView === 'wheel'} onClick={() => setCurrentView('wheel')} />}
             <NavBtn icon={<Trophy size={18}/>} label="KOL AI" active={currentView === 'leaderboard'} onClick={() => setCurrentView('leaderboard')} />
@@ -1351,11 +1353,11 @@ export default function App() {
         </nav>
       )}
 
-      <main className="p-4 sm:p-6 lg:p-8 flex justify-center min-h-[calc(100vh-80px)]">
+      <main className="w-full min-w-0 px-2 py-4 sm:p-6 lg:p-8 flex justify-center min-h-[calc(100vh-80px)]">
         {!loggedInUser ? (
           <AuthForms allUsers={allUsers} onLoginSuccess={handleLoginSuccess} />
         ) : (
-          <div className="w-full max-w-5xl animate-fade-in">
+          <div className="w-full min-w-0 max-w-5xl animate-fade-in">
             {currentView === 'dashboard' && <Dashboard userData={loggedInUser} allUsers={allUsers} />}
             {currentView === 'wheel' && loggedInUser.role !== 'admin' && <WheelGame userData={loggedInUser} questions={questions} />}
             {currentView === 'leaderboard' && <Leaderboard allUsers={allUsers} currentUserData={loggedInUser} />}
