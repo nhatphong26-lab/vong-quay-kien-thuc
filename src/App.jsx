@@ -1167,7 +1167,7 @@ const AdminPanel = ({ questions, allUsers }) => {
                    <div>
                       <label className="block text-sm text-gray-300 mb-1">Mức độ khó</label>
                       <select value={formData.difficulty} onChange={e=>setFormData({...formData, difficulty: e.target.value})} className="w-full bg-[#0d0715] border border-[#3d1a66] rounded-lg px-3 py-2 text-white outline-none focus:border-[#f5c542]">
-                         <option value="easy">Dễ (+5 điểm / -2 điểm)</option><option value="medium">Trung bình (+10 điểm / -5 điểm)</option><option value="hard">Khó (+15 điểm / -7 điểm)</option>
+                         <option value="easy">Dễ (+10 xu / -2 xu)</option><option value="medium">Trung bình (+10 xu / -5 xu)</option><option value="hard">Khó (+10 xu / -7 xu)</option>
                       </select>
                    </div>
                 </div>
