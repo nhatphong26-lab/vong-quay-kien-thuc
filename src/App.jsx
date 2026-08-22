@@ -11,6 +11,8 @@ import {
   onSnapshot,
   updateDoc,
   deleteDoc,
+  signInAdmin,
+  signOutAdmin,
 } from './localDatabase.js';
 import { DEFAULT_QUESTIONS } from './defaultQuestions.js';
 import { Trophy, User, LogOut, Settings, Play, Star, Zap, Flame, ShieldAlert, ShieldCheck, Medal, Crown, X, Trash2, Ticket, Music, VolumeX, Bot, Info, Clock } from 'lucide-react';
@@ -41,13 +43,6 @@ const DIFFICULTY_SCORES = {
 
 const MAX_SPINS_PER_DAY = 5;
 const ADMIN_USERNAME = 'admin';
-const ADMIN_PASSWORD_HASH = 'ab99bc36de4b4ac860b5959a7a062972a5310be37429fb8ed5e5aeaff713813e';
-
-const hashPassword = async (value) => {
-  const bytes = new TextEncoder().encode(value);
-  const digest = await crypto.subtle.digest('SHA-256', bytes);
-  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
-};
 
 const getTodayString = () => new Date().toISOString().split('T')[0];
 const getYesterdayString = () => {
@@ -887,11 +882,12 @@ const AuthForms = ({ allUsers, onLoginSuccess }) => {
 
     try {
       if (isLogin) {
+        if (cleanUsername === ADMIN_USERNAME) await signInAdmin(password);
         const user = allUsers.find(u => u.username === cleanUsername);
         if (!user) {
-           if (cleanUsername === ADMIN_USERNAME && await hashPassword(password) === ADMIN_PASSWORD_HASH) {
+           if (cleanUsername === ADMIN_USERNAME) {
               const newUserRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'users'));
-              const newUserData = { username: cleanUsername, password: ADMIN_PASSWORD_HASH, displayName: 'Giáo viên', role: 'admin', points: 0, power: 0, streak: 0, lastLogin: '', spinsLeft: MAX_SPINS_PER_DAY, correctAnswers: 0, consecutiveCorrect: 0, perfectSpins: 0, badges: [], history: [], cheeredToday: [] };
+              const newUserData = { username: cleanUsername, displayName: 'Giáo viên', role: 'admin', points: 0, power: 0, streak: 0, lastLogin: '', spinsLeft: MAX_SPINS_PER_DAY, correctAnswers: 0, consecutiveCorrect: 0, perfectSpins: 0, badges: [], history: [], cheeredToday: [] };
               await setDoc(newUserRef, newUserData);
               onLoginSuccess({ id: newUserRef.id, ...newUserData });
               setLoading(false); return;
@@ -900,13 +896,10 @@ const AuthForms = ({ allUsers, onLoginSuccess }) => {
         } else {
            const isAdmin = user.role === 'admin' || cleanUsername === ADMIN_USERNAME;
            const passwordMatches = isAdmin
-             ? await hashPassword(password) === ADMIN_PASSWORD_HASH
+             ? true
              : user.password === password;
            if (!passwordMatches) {
              setError('Sai mật khẩu!');
-           } else if (isAdmin && user.password !== ADMIN_PASSWORD_HASH) {
-             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', user.id), { password: ADMIN_PASSWORD_HASH });
-             onLoginSuccess({ ...user, password: ADMIN_PASSWORD_HASH, role: 'admin' });
            } else {
              onLoginSuccess(user);
            }
@@ -921,7 +914,7 @@ const AuthForms = ({ allUsers, onLoginSuccess }) => {
         await setDoc(newUserRef, newUserData);
         onLoginSuccess({ id: newUserRef.id, ...newUserData });
       }
-    } catch (err) { console.error(err); setError('Có lỗi kết nối. Vui lòng thử lại.'); }
+    } catch (err) { console.error(err); setError(cleanUsername === ADMIN_USERNAME ? 'Sai mật khẩu quản trị hoặc chưa kết nối được Supabase.' : 'Có lỗi kết nối. Vui lòng thử lại.'); }
     setLoading(false);
   };
 
@@ -1057,7 +1050,7 @@ const AdminPanel = ({ questions, allUsers }) => {
       setFormData({ text: '', opt0: '', opt1: '', opt2: '', opt3: '', correctIndex: 0, topic: formData.topic, difficulty: formData.difficulty });
       setFormMsg({ type: 'success', text: 'Đã lưu câu hỏi thành công!' });
       setTimeout(() => setFormMsg({ type: '', text: '' }), 3000);
-    } catch (err) { setFormMsg({ type: 'error', text: 'Có lỗi xảy ra khi lưu.' }); }
+    } catch (err) { setFormMsg({ type: 'error', text: err.message || 'Có lỗi xảy ra khi lưu.' }); }
     setIsSubmitting(false);
   };
 
@@ -1112,7 +1105,7 @@ const AdminPanel = ({ questions, allUsers }) => {
           setFormMsg({ type: 'success', text: `Đã xoá ${selectedQs.length} câu hỏi thành công!` });
           setSelectedQs([]); 
           setTimeout(() => setFormMsg({ type: '', text: '' }), 3000);
-      } catch (e) { setFormMsg({ type: 'error', text: 'Lỗi khi xoá câu hỏi.' }); }
+      } catch (e) { setFormMsg({ type: 'error', text: e.message || 'Lỗi khi xoá câu hỏi.' }); }
       setIsSubmitting(false);
   };
 
@@ -1365,7 +1358,7 @@ export default function App() {
             {loggedInUser.role !== 'admin' && <NavBtn icon={<Play size={18}/>} label="Chơi Ngay" active={currentView === 'wheel'} onClick={() => setCurrentView('wheel')} />}
             <NavBtn icon={<Trophy size={18}/>} label="KOL AI" active={currentView === 'leaderboard'} onClick={() => setCurrentView('leaderboard')} />
             {loggedInUser.role === 'admin' && <NavBtn icon={<Settings size={18}/>} label="Quản trị" active={currentView === 'admin'} onClick={() => setCurrentView('admin')} />}
-            <button onClick={() => { safeStorage.remove('quizWheelUserId'); setLoggedInUser(null); setCurrentView('login'); }} className="p-2 sm:px-4 sm:py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors flex items-center space-x-2"><LogOut size={18} /> <span className="hidden sm:inline">Thoát</span></button>
+            <button onClick={() => { safeStorage.remove('quizWheelUserId'); if (loggedInUser.role === 'admin') signOutAdmin(); setLoggedInUser(null); setCurrentView('login'); }} className="p-2 sm:px-4 sm:py-2 rounded-lg text-red-400 hover:bg-red-400/10 transition-colors flex items-center space-x-2"><LogOut size={18} /> <span className="hidden sm:inline">Thoát</span></button>
           </div>
         </nav>
       )}
