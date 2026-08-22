@@ -12,6 +12,7 @@ import {
   updateDoc,
   deleteDoc,
 } from './localDatabase.js';
+import { DEFAULT_QUESTIONS } from './defaultQuestions.js';
 import { Trophy, User, LogOut, Settings, Play, Star, Zap, Flame, ShieldAlert, ShieldCheck, Medal, Crown, X, Trash2, Ticket, Music, VolumeX, Bot, Info, Clock } from 'lucide-react';
 
 const firebaseConfig = {};
@@ -33,9 +34,9 @@ const THEME = {
 };
 
 const DIFFICULTY_SCORES = {
-  easy: { correct: 5, wrong: -2, name: 'Dễ' },
+  easy: { correct: 10, wrong: -2, name: 'Dễ' },
   medium: { correct: 10, wrong: -5, name: 'Trung Bình' },
-  hard: { correct: 15, wrong: -7, name: 'Khó' }
+  hard: { correct: 10, wrong: -7, name: 'Khó' }
 };
 
 const MAX_SPINS_PER_DAY = 5;
@@ -303,7 +304,7 @@ const AIAssistant = () => {
     setChat(prev => [...prev, { role: 'user', text: userText }]);
     setIsTyping(true);
 
-    const prompt = `Học sinh hỏi: "${userText}".\n\nThông tin game:\n- Vòng Quay Kiến Thức.\n- Quay vòng nhận câu hỏi trắc nghiệm.\n- Mỗi ngày có 5 lượt. Hết lượt có thể MUA THÊM lượt bằng xu (1 lượt=20xu, 3 lượt=45xu, 5 lượt=75xu, 10 lượt=150xu) hoặc đi Cổ vũ TOP 3 để nhận xu ngẫu nhiên.\n- Lực Chiến (LC) = (Chuỗi ngày x 1) + (Câu đúng x 2) + (Siêu tốc x 10) + (Huy hiệu x 5).\n- Trả lời đúng (Dễ +5, TB +10, Khó +15), Sai bị trừ.\n- Trả lời đúng 3 lần được +1 lượt quay miễn phí.\n\nĐóng vai trợ lý Cú Mèo, trả lời siêu ngắn gọn (1-2 câu), vui vẻ để hướng dẫn. Tuyệt đối không xưng "tôi" hay "robot".`;
+    const prompt = `Học sinh hỏi: "${userText}".\n\nThông tin game:\n- Vòng Quay Kiến Thức.\n- Quay vòng nhận câu hỏi trắc nghiệm.\n- Mỗi ngày có 5 lượt. Hết lượt có thể MUA THÊM lượt bằng xu (1 lượt=20xu, 3 lượt=45xu, 5 lượt=75xu, 10 lượt=150xu) hoặc đi Cổ vũ TOP 3 để nhận xu ngẫu nhiên.\n- Lực Chiến (LC) = (Chuỗi ngày x 1) + (Câu đúng x 2) + (Siêu tốc x 10) + (Huy hiệu x 5).\n- Trả lời đúng được +10 xu, cộng thêm số xu đã quay trúng; trả lời sai bị trừ xu theo độ khó.\n- Trả lời đúng 3 lần được +1 lượt quay miễn phí.\n\nĐóng vai trợ lý Cú Mèo, trả lời siêu ngắn gọn (1-2 câu), vui vẻ để hướng dẫn. Tuyệt đối không xưng "tôi" hay "robot".`;
     
     const response = await callGemini(prompt, "Bạn là Cú Mèo, trợ lý ảo trong game Vòng Quay Kiến Thức.");
     setChat(prev => [...prev, { role: 'model', text: response || 'Hệ thống năng lượng đang bảo trì, bạn hỏi lại sau xíu nhé!' }]);
@@ -1237,6 +1238,7 @@ export default function App() {
   const [loggedInUser, setLoggedInUser] = useState(null);
   const [currentView, setCurrentView] = useState('login'); 
   const initialCheckDone = useRef(false);
+  const defaultQuestionsSeeded = useRef(false);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -1263,7 +1265,7 @@ export default function App() {
                setCurrentView(u.role === 'admin' ? 'admin' : 'dashboard');
                const today = getTodayString();
                if (u.lastLogin !== today) {
-                   const updates = { lastLogin: today, spinsLeft: Math.max(u.spinsLeft || 0, MAX_SPINS_PER_DAY), cheeredToday: [] };
+                   const updates = { lastLogin: today, spinsLeft: MAX_SPINS_PER_DAY, cheeredToday: [] };
                    updates.streak = u.lastLogin === getYesterdayString() ? (u.streak || 0) + 1 : 1;
                    updates.power = calculatePower({ ...u, ...updates });
                    updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'users', u.id), updates).catch(console.error);
@@ -1274,7 +1276,14 @@ export default function App() {
     }, console.error);
 
     const unsubQ = onSnapshot(collection(db, 'artifacts', appId, 'public', 'data', 'questions'), (snap) => {
-      setQuestions(uniqueQuestions(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+      const storedQuestions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      setQuestions(uniqueQuestions(storedQuestions));
+      if (storedQuestions.length === 0 && !defaultQuestionsSeeded.current) {
+        defaultQuestionsSeeded.current = true;
+        Promise.all(DEFAULT_QUESTIONS.map(question =>
+          setDoc(doc(collection(db, 'artifacts', appId, 'public', 'data', 'questions')), question)
+        )).catch(error => console.error('Không thể tạo ngân hàng câu hỏi mặc định', error));
+      }
     }, console.error);
 
     return () => { unsubUsers(); unsubQ(); };
@@ -1294,7 +1303,7 @@ export default function App() {
 
     if (user.lastLogin !== today) {
       needsUpdate = true;
-      updates.lastLogin = today; updates.spinsLeft = Math.max(user.spinsLeft || 0, MAX_SPINS_PER_DAY); updates.cheeredToday = [];
+      updates.lastLogin = today; updates.spinsLeft = MAX_SPINS_PER_DAY; updates.cheeredToday = [];
       updates.streak = user.lastLogin === getYesterdayString() ? (user.streak || 0) + 1 : 1;
       const currentBadges = user.badges || [];
       if (updates.streak >= 7 && !currentBadges.includes('Chuyên cần')) updates.badges = [...currentBadges, 'Chuyên cần'];

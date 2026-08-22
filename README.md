@@ -9,6 +9,8 @@ Trò chơi học tập được đóng gói lại từ bản thiết kế Gemini
 
 Dữ liệu được lưu ngay trong trình duyệt của thiết bị bằng Local Storage, vì vậy bản GitHub Pages chạy độc lập và không cần Firebase.
 
+Ứng dụng tự tạo ngân hàng 50 câu hỏi tiểu học khi trình duyệt chưa có câu hỏi. Câu hỏi do quản trị thêm, tài khoản, xu và tiến trình được giữ lại trên cùng trình duyệt. Đầu mỗi ngày mới, lượt quay được đặt lại về 5 nhưng số xu được giữ nguyên.
+
 Tài khoản quản trị mặc định trong bản gốc: `admin` / `123@`. Hãy đổi thông tin này trước khi dùng chính thức.
 
 ## Xuất bản GitHub Pages
